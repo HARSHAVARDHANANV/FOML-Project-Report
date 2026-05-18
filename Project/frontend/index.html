@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Segmentation Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-title-group">
+                    <h1>Customer Segmentation</h1>
+                    <p class="subtitle">AI-Powered Analytics &amp; Insights</p>
+                </div>
+                
+                <!-- Mode Switcher -->
+                <div class="mode-switcher">
+                    <button class="mode-tab active" data-mode="single">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Single Customer
+                    </button>
+                    <button class="mode-tab" data-mode="batch">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        Batch Upload
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-container">
+            
+            <!-- ═══ SINGLE CUSTOMER MODE ═══════════════════════════════════ -->
+            <div class="mode-content active" id="singleMode">
+                <div class="two-column-grid">
+                    
+                    <!-- LEFT COLUMN: Input Form (Persistent Sidebar) -->
+                    <div class="form-sidebar">
+                        <div class="sidebar-header">
+                            <h2>Customer Input</h2>
+                            <p class="sidebar-subtitle">Enter customer metrics for analysis</p>
+                        </div>
+
+                        <!-- Error Summary -->
+                        <div class="error-summary" id="errorSummary" style="display: none;">
+                            <div class="error-header">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Please fix the following errors:</span>
+                            </div>
+                            <ul class="error-list" id="errorList"></ul>
+                        </div>
+
+                        <form id="segmentForm" class="form">
+                            <div class="form-group">
+                                <label for="income">
+                                    <span class="label-text">Annual Income</span>
+                                    <span class="label-hint">in thousands ($K)</span>
+                                </label>
+                                <input type="number" id="income" name="income" step="0.1" required placeholder="e.g., 50">
+                                <span class="field-error" id="incomeError"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="spendingScore">
+                                    <span class="label-text">Spending Score</span>
+                                    <span class="label-hint">1–100</span>
+                                </label>
+                                <input type="number" id="spendingScore" name="spendingScore" step="0.1" min="1" max="100" required placeholder="e.g., 75">
+                                <span class="field-error" id="spendingScoreError"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="frequency">
+                                    <span class="label-text">Purchase Frequency</span>
+                                    <span class="label-hint">per month</span>
+                                </label>
+                                <input type="number" id="frequency" name="frequency" step="0.1" required placeholder="e.g., 12">
+                                <span class="field-error" id="frequencyError"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="recency">
+                                    <span class="label-text">Recency</span>
+                                    <span class="label-hint">days since last purchase</span>
+                                </label>
+                                <input type="number" id="recency" name="recency" step="1" required placeholder="e.g., 30">
+                                <span class="field-error" id="recencyError"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="monetary">
+                                    <span class="label-text">Monetary Value</span>
+                                    <span class="label-hint">total lifetime spending</span>
+                                </label>
+                                <input type="number" id="monetary" name="monetary" step="0.1" required placeholder="e.g., 1500">
+                                <span class="field-error" id="monetaryError"></span>
+                            </div>
+
+                            <button type="submit" class="submit-btn" id="submitBtn">
+                                <span class="btn-text">Analyze</span>
+                                <span class="btn-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </span>
+                                <span class="loading-spinner" style="display: none;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Results & Chart -->
+                    <div class="results-column">
+                        
+                        <!-- Results Panel (Always Visible) -->
+                        <div class="results-panel" id="resultsPanel">
+                            <div class="results-panel-header">
+                                <h3>Analysis Result</h3>
+                            </div>
+
+                            <div class="results-content" id="resultsContent">
+                                <!-- Skeleton/Placeholder State -->
+                                <div class="skeleton-state" id="skeletonState">
+                                    <div class="skeleton-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                        </svg>
+                                    </div>
+                                    <p class="skeleton-text">Awaiting analysis…</p>
+                                    <p class="skeleton-hint">Fill in the form and click Analyze to see results</p>
+                                </div>
+
+                                <!-- Live Results (hidden by default) -->
+                                <div class="live-results" id="liveResults" style="display: none;">
+                                    <div class="segment-badge" id="segmentBadge">
+                                        <span class="badge-label">Customer Segment</span>
+                                        <span class="badge-value" id="segmentValue">-</span>
+                                    </div>
+
+                                    <div class="results-grid">
+                                        <div class="result-item pattern-item">
+                                            <div class="result-icon">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="result-content">
+                                                <span class="result-label">Behavior Pattern</span>
+                                                <span class="result-value" id="patternValue">-</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="result-item cluster-item">
+                                            <div class="result-icon">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                                </svg>
+                                            </div>
+                                            <div class="result-content">
+                                                <span class="result-label">Cluster</span>
+                                                <span class="result-value" id="clusterValue">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="insight-section">
+                                        <div class="insight-header">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                            </svg>
+                                            <span>Key Insight</span>
+                                        </div>
+                                        <p class="insight-text" id="insightValue">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Distribution Chart -->
+                        <div class="chart-panel" id="chartPanel">
+                            <div class="chart-header">
+                                <h3>Distribution</h3>
+                                <p class="chart-subtitle">Income vs. Spending Score</p>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="scatterChart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="chartLegend"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ BATCH UPLOAD MODE ═══════════════════════════════════ -->
+            <div class="mode-content" id="batchMode">
+                <div class="batch-container">
+                    
+                    <!-- Upload Section -->
+                    <div class="batch-upload-card">
+                        <div class="upload-header">
+                            <div class="upload-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </div>
+                            <div class="upload-text">
+                                <h2>Batch Segmentation</h2>
+                                <p>Upload a CSV file with multiple customers for bulk analysis</p>
+                            </div>
+                        </div>
+
+                        <div class="columns-info">
+                            <span class="info-label">Required columns:</span>
+                            <div class="columns-list">
+                                <span class="column-tag">Income</span>
+                                <span class="column-tag">SpendingScore</span>
+                                <span class="column-tag">Frequency</span>
+                                <span class="column-tag">Recency</span>
+                                <span class="column-tag">Monetary</span>
+                                <span class="column-tag optional">CustomerID (optional)</span>
+                            </div>
+                        </div>
+
+                        <div class="drop-zone" id="dropZone">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p class="drop-title">Drag and drop your CSV file</p>
+                            <p class="drop-or">or</p>
+                            <label class="file-browse-label" for="csvFileInput">Browse computer</label>
+                            <input type="file" id="csvFileInput" accept=".csv" style="display:none">
+                            <p class="drop-hint" id="dropFileName">No file selected</p>
+                        </div>
+
+                        <div class="batch-actions">
+                            <button class="submit-btn batch-btn" id="batchSubmitBtn" disabled>
+                                <span class="btn-text">Run Segmentation</span>
+                                <span class="btn-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                </span>
+                                <span class="loading-spinner" style="display:none;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Batch Results Section -->
+                    <div class="batch-results-area" id="batchResultsArea" style="display:none;">
+                        <div class="results-header">
+                            <div class="results-header-content">
+                                <h2>Batch Results</h2>
+                                <div class="batch-summary" id="batchSummary"></div>
+                            </div>
+                            <button class="export-btn batch-export-btn" id="batchExportBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Export
+                            </button>
+                        </div>
+
+                        <div class="batch-table-wrapper">
+                            <table class="batch-table" id="batchTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Customer ID</th>
+                                        <th>Segment</th>
+                                        <th>Cluster</th>
+                                        <th>Pattern</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchTableBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination" id="pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
